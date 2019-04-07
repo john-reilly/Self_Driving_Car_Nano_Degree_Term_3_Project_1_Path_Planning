@@ -55,7 +55,7 @@ int main() {
   //lane number
   int lane = 1;//outside scope?
   
-  double ref_vel =  49.5 ;//mph
+  double ref_vel =  0 ; // was 49.5 ;//mph
   
 
   h.onMessage([&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,
@@ -131,12 +131,12 @@ int main() {
               
               check_car_s += ((double ) prev_size * 0.02 * check_speed) ; //if useing previuos points can project s value
               //check s value greater than mine and check s gap
-              if((check_car_s > car_s ) && ((check_car_s ) < 30))
+              if((check_car_s > car_s ) && ((check_car_s- car_s) < 30))
               {
                 //do some logic here lower ref velocity so we don't crash into car in frount of us 
                 //also could flag try to change lanes
-                ref_vel = 29.5 ; //mph //this might be overridden else where with my work around
-                //too_close = true ;
+                //ref_vel = 29.5 ; //mph //this might be overridden else where with my work around
+                too_close = true ;
               }
               
             }
@@ -146,6 +146,10 @@ int main() {
           if (too_close)
           {
             ref_vel -= 0.224;
+          }
+          else if (ref_vel < 49.5 )
+          {
+            ref_vel += 0.224 ;
           }
           
           //below is part 2 of video but before extra commented out collision avoidance section
@@ -193,7 +197,7 @@ int main() {
             
             //using frenet point 
             //tried //lane = 1; // I am getting lane not captured here going to using hardwaired number to get past it
-            int lane_number = 2 + 4 ; //as in 2 + 4 times lane;
+           // int lane_number = 2 + 4 ; //as in 2 + 4 times lane;//fixed
 			 vector<double> next_wp0 = getXY(car_s + 30, 2 + 4 * lane, map_waypoints_s,map_waypoints_x,map_waypoints_y);
             
              vector<double> next_wp1 = getXY(car_s + 60,  2 + 4 * lane, map_waypoints_s,map_waypoints_x,map_waypoints_y);
