@@ -194,11 +194,11 @@ int main() {
             //using frenet point 
             //tried //lane = 1; // I am getting lane not captured here going to using hardwaired number to get past it
             int lane_number = 2 + 4 ; //as in 2 + 4 times lane;
-			 vector<double> next_wp0 = getXY(car_s + 30, lane_number, map_waypoints_s,map_waypoints_x,map_waypoints_y);
+			 vector<double> next_wp0 = getXY(car_s + 30, 2 + 4 * lane, map_waypoints_s,map_waypoints_x,map_waypoints_y);
             
-             vector<double> next_wp1 = getXY(car_s + 60, lane_number, map_waypoints_s,map_waypoints_x,map_waypoints_y);
+             vector<double> next_wp1 = getXY(car_s + 60,  2 + 4 * lane, map_waypoints_s,map_waypoints_x,map_waypoints_y);
             
-             vector<double> next_wp2 = getXY(car_s + 90, lane_number, map_waypoints_s,map_waypoints_x,map_waypoints_y);
+             vector<double> next_wp2 = getXY(car_s + 90,  2 + 4 * lane, map_waypoints_s,map_waypoints_x,map_waypoints_y);
          
             
           
@@ -247,7 +247,7 @@ int main() {
           //fill up the rest of the path planner
           for(int i = 1; i<= 50 - previous_path_x.size();i++)
           {//another "not captured error"
-            int ref_vel = 49.5; //the location of the first ref_vel declaration outside hte thread must be the issue??
+           // int ref_vel = 49.5; //the location of the first ref_vel declaration outside hte thread must be the issue??//fixed by bring ref_vel into scope with &ref_vel
             double N = (target_dist/( 0.02 * ref_vel / 2.24 ) );
             double x_point = x_add_on+(target_x)/N;
             double y_point = s(x_point) ; 
