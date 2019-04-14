@@ -137,6 +137,12 @@ int main() {
                 //also could flag try to change lanes
                 //ref_vel = 29.5 ; //mph //this might be overridden else where with my work around
                 too_close = true ;
+                
+                // change line addition Q+A video minute 54.18
+                if(lane > 0)
+                {
+                  lane = 0;
+                }
               }
               
             }
