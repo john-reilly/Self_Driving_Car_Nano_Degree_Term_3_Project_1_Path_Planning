@@ -117,12 +117,20 @@ int main() {
           }
           
           bool too_close = false;
+          // my state related booleans
+          // setting defaults to false so not to assume
+          bool left_lane_clear = false ;
+          bool right_lane_clear = false ;
+          bool centre_lane_clear = false ;
+          bool another_car_in_my_lane = false ; 
+          //end of mine
           //find ref_v to use
           for(int i = 0 ; i < sensor_fusion.size() ; i++)
           {
             //car is in my lane
+            
             float d = sensor_fusion[i][6];
-            if(d < (2 + 4 * lane + 2) && d >(2+ 4 * lane -2) )
+            if(d < (2 + 4 * lane + 2) && d >(2+ 4 * lane -2) )//is the car in the same lane as me
             {
               double vx = sensor_fusion[i][3];
               double vy = sensor_fusion[i][4];
