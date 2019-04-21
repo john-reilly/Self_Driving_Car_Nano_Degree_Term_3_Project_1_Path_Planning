@@ -56,11 +56,15 @@ int main() {
   int lane = 1;//outside scope?
   
   double ref_vel =  0 ; // was 49.5 ;//mph
+  double gentle_acceleration = 0.224 ; // this was Q+A provided level
   double jerk_limit_acceleration = 0.300 ;// this was 0.224 but I am getting caught by lane cut off vehicles and need to slow down faster
+  double brake_rate = 0.4 ;// I just pciked a higher number than above ....
+  double emergency_stop = 0.6;
+  
   
 
   h.onMessage([&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,
-               &map_waypoints_dx,&map_waypoints_dy, &lane,&jerk_limit_acceleration, & ref_vel]
+               &map_waypoints_dx,&map_waypoints_dy, &lane,&gentle_acceleration,&jerk_limit_acceleration,&brake_rate, &emergency_stop, & ref_vel]
               (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
@@ -117,7 +121,11 @@ int main() {
             car_s = end_path_s ;
           }
           
-          bool too_close = false;
+          //bool too_close = false;// this was from the Q+A video as basic slow down
+          bool within_40m = false;// this will be to allow a gental slow down at long range
+          bool within_30m = false;//this is the same distance as the Q+A video for normal slow down
+          bool within_15m = false;//this will be for hard brake and will create a "jerk" event but better than a crash I think!
+          bool within_5m = false;//this will creata an emergency stop which will trigger a "jerk" event but I have seen the ego car cut off a few times and I would prefer if it did an emergency stop to a collision....also I haven't seen anybody else do this :)
           // my state related booleans
           // setting defaults to false so not to assume
           bool left_lane_clear = true ; //set these to true so if one dection is found lane staus is changed
@@ -193,26 +201,44 @@ int main() {
               
               check_car_s += ((double ) prev_size * 0.02 * check_speed) ; //if useing previuos points can project s value
               //check s value greater than mine and check s gap
-              if((check_car_s > car_s ) && ((check_car_s- car_s) < 30))
-              {
+//              if((check_car_s > car_s ) && ((check_car_s- car_s) < 30))
+//              {
                 //do some logic here lower ref velocity so we don't crash into car in frount of us 
-                //also could flag try to change lanes
-               
-                too_close = true ;
-                
+                //also could flag try to change lanes             
+//                too_close = true ;                
+                                
                 // change line addition Q+A video minute 54.18
                // if(lane > 0)
                // {
                //   lane = 0;
                // }
+//              }
+              
+              if((check_car_s > car_s ) && ((check_car_s- car_s) <= 40)&& ((check_car_s- car_s) > 30))
+              {
+              	within_40m = true;
+              }
+              else  if((check_car_s > car_s ) && ((check_car_s- car_s) <= 30)&& ((check_car_s- car_s) > 15))
+              {
+               within_30m = true;
+              }
+              else if((check_car_s > car_s ) && ((check_car_s- car_s) <= 15)&& ((check_car_s- car_s) > 5))
+              {
+              	within_15m = true; 
+              }
+              else if((check_car_s > car_s ) && ((check_car_s- car_s) <= 5)&& ((check_car_s- car_s) > 0))
+              {
+               within_5m = true;
               }
               
             }
             
           }
           // based on above make state decisions here.
-         //my deciosn logic here
-          
+         //my decision logic here
+          // I read on stack overflow that if else statements are faster than if and more if's 
+          // this is becuase the subsequent cases are not evaluated if earlier ones are true
+          // So I am going to wrtie the logic here with if - else statements
           if(another_car_in_my_lane == true)
           {
             std::cout << "car in my lane" << std::endl ;
@@ -220,20 +246,14 @@ int main() {
             if(lane == 0 && centre_lane_clear == true )
             { 
               lane = 1 ;
-            }              
-            
-            //if you are in lane 1 go to left or else right
-            if(lane == 1 && left_lane_clear == true )
-            { 
-              lane = 0 ;
+            }else if(lane == 1 && left_lane_clear == true )
+            {//if you are in lane 1 go to left or else right    
+              lane = 0 ;//this will be a slight bias to left lane as it appear first
             }else if(lane == 1 && right_lane_clear == true )
             {
               lane = 2 ;
-            }
-            
-            //if you are in right go centre
-            if(lane == 2 && centre_lane_clear == true )
-            { 
+            }else if(lane == 2 && centre_lane_clear == true )
+            { //if you are in right go centre
               lane = 1 ;
             } 
             
@@ -241,16 +261,42 @@ int main() {
        
           
           
-          if (too_close)
+//          if (too_close)
+//          {
+//            ref_vel -= jerk_limit_acceleration ;// old Q+A value 0.224;
+//          }
+//          else if (ref_vel < 49.5 )
+//          {
+//           ref_vel += jerk_limit_acceleration ; // old Q+A value 0.224  ;
+//          }
+          
+          if(within_40m)
           {
-            ref_vel -= jerk_limit_acceleration ;// old Q+A value 0.224;
+            ref_vel -= gentle_acceleration;
+          }
+          else if(within_30m)
+          {
+            ref_vel -= jerk_limit_acceleration ;
+          }
+          else if(within_15m)
+          {
+            ref_vel -= brake_rate ;
+          }
+          else if(within_5m)
+          {
+            ref_vel -=  emergency_stop ;
           }
           else if (ref_vel < 49.5 )
           {
-            ref_vel += jerk_limit_acceleration ; // old Q+A value 0.224  ;
+           ref_vel += jerk_limit_acceleration ; // old Q+A value 0.224  ;
           }
+           
+          
           //staus output
-          std::cout << "too_close: " << too_close << "centre_lane_clear: " << centre_lane_clear << "right_lane_clear: " << right_lane_clear << "left_lane_clear: " << left_lane_clear      <<std::endl     ;
+          //std::cout << "too_close: " << too_close << "centre_lane_clear: " << centre_lane_clear << "right_lane_clear: " << right_lane_clear << "left_lane_clear: " << left_lane_clear      <<std::endl     ;
+          std::cout << "Within 40m: " << within_40m << " within 30 m: " << within_30m << " within 15: " << within_15m << " within 5: " <<within_5m << std::endl ;
+          std::cout << "centre_lane_clear: " << centre_lane_clear << " right_lane_clear: " << right_lane_clear << " left_lane_clear: " << left_lane_clear      <<std::endl     ;
+          std::cout << "Lane: " << lane << std::endl ;
           
           
           //below is part 2 of video but before extra commented out collision avoidance section
