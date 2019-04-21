@@ -56,10 +56,11 @@ int main() {
   int lane = 1;//outside scope?
   
   double ref_vel =  0 ; // was 49.5 ;//mph
+  double jerk_limit_acceleration = 0.300 ;// this was 0.224 but I am getting caught by lane cut off vehicles and need to slow down faster
   
 
   h.onMessage([&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,
-               &map_waypoints_dx,&map_waypoints_dy, &lane, & ref_vel]
+               &map_waypoints_dx,&map_waypoints_dy, &lane,&jerk_limit_acceleration, & ref_vel]
               (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
@@ -242,11 +243,11 @@ int main() {
           
           if (too_close)
           {
-            ref_vel -= 0.224;
+            ref_vel -= jerk_limit_acceleration ;// old Q+A value 0.224;
           }
           else if (ref_vel < 49.5 )
           {
-            ref_vel += 0.224 ;
+            ref_vel += jerk_limit_acceleration ; // old Q+A value 0.224  ;
           }
           //staus output
           std::cout << "too_close: " << too_close << "centre_lane_clear: " << centre_lane_clear << "right_lane_clear: " << right_lane_clear << "left_lane_clear: " << left_lane_clear      <<std::endl     ;
