@@ -119,19 +119,72 @@ int main() {
           bool too_close = false;
           // my state related booleans
           // setting defaults to false so not to assume
-          bool left_lane_clear = false ;
-          bool right_lane_clear = false ;
-          bool centre_lane_clear = false ;
+          bool left_lane_clear = true ; //set these to true so if one dection is found lane staus is changed
+          bool right_lane_clear = true ;
+          bool centre_lane_clear = true ;
           bool another_car_in_my_lane = false ; 
           //end of mine
           //find ref_v to use
           for(int i = 0 ; i < sensor_fusion.size() ; i++)
           {
-            //car is in my lane
+            
             
             float d = sensor_fusion[i][6];
+            //mine
+            //check left lane
+            if(d < (2 + 4 * 0 + 2) && d >(2+ 4 * 0 -2) )
+            {
+              double vx = sensor_fusion[i][3];
+              double vy = sensor_fusion[i][4];
+              double check_speed = sqrt(vx*vx + vy * vy);
+              double check_car_s = sensor_fusion[i][5];//as provides for same lane below
+              check_car_s += ((double ) prev_size * 0.02 * check_speed) ;
+              //same idea as presented in video 
+              //too many checks here should not have first one which makes sure cars is ahead of us I took this from the slow down section which should have been adapted more for here. the result was in some lane changes there was collisions with cars close to but behind the ego car.
+              //if((check_car_s > car_s ) && ((check_car_s- car_s) < 30)&& ((check_car_s- car_s) > -30)  )
+              if( ((check_car_s- car_s) < 30)&& ((check_car_s- car_s) > -30)  )
+              {
+                   left_lane_clear = false ;
+              }
+            }
+            //check centre land
+            if(d < (2 + 4 * 1 + 2) && d >(2+ 4 * 1 -2) )
+            {
+              double vx = sensor_fusion[i][3];
+              double vy = sensor_fusion[i][4];
+              double check_speed = sqrt(vx*vx + vy * vy);
+              double check_car_s = sensor_fusion[i][5];//as provides for same lane below
+              check_car_s += ((double ) prev_size * 0.02 * check_speed) ;
+              //same idea as presented in video 
+             // if((check_car_s > car_s ) && ((check_car_s- car_s) < 30) && ((check_car_s- car_s) > -30)  )
+              if( ((check_car_s- car_s) < 30) && ((check_car_s- car_s) > -30)  )
+              {
+                   centre_lane_clear = false ;
+              }
+            }  
+            //check right lane
+            if(d < (2 + 4 * 2 + 2) && d >(2+ 4 * 2 -2) )
+            {  
+              double vx = sensor_fusion[i][3];
+              double vy = sensor_fusion[i][4];
+              double check_speed = sqrt(vx*vx + vy * vy);
+              double check_car_s = sensor_fusion[i][5];//as provides for same lane below
+              check_car_s += ((double ) prev_size * 0.02 * check_speed) ;
+              //same idea as presented in video 
+              //if((check_car_s > car_s ) && ((check_car_s- car_s) < 30) && ((check_car_s- car_s) > -30)  )
+              if( ((check_car_s- car_s) < 30) && ((check_car_s- car_s) > -30)  )
+              {
+                   right_lane_clear = false ;
+              }
+            }
+              
+              
+            
+            //end of mine
             if(d < (2 + 4 * lane + 2) && d >(2+ 4 * lane -2) )//is the car in the same lane as me
             {
+              another_car_in_my_lane = true ; //mine
+              
               double vx = sensor_fusion[i][3];
               double vy = sensor_fusion[i][4];
               double check_speed = sqrt(vx*vx + vy * vy);
@@ -143,19 +196,49 @@ int main() {
               {
                 //do some logic here lower ref velocity so we don't crash into car in frount of us 
                 //also could flag try to change lanes
-                //ref_vel = 29.5 ; //mph //this might be overridden else where with my work around
+               
                 too_close = true ;
                 
                 // change line addition Q+A video minute 54.18
-                if(lane > 0)
-                {
-                  lane = 0;
-                }
+               // if(lane > 0)
+               // {
+               //   lane = 0;
+               // }
               }
               
             }
             
           }
+          // based on above make state decisions here.
+         //my deciosn logic here
+          
+          if(another_car_in_my_lane == true)
+          {
+            std::cout << "car in my lane" << std::endl ;
+            //if you are in lane 0 go into centre
+            if(lane == 0 && centre_lane_clear == true )
+            { 
+              lane = 1 ;
+            }              
+            
+            //if you are in lane 1 go to left or else right
+            if(lane == 1 && left_lane_clear == true )
+            { 
+              lane = 0 ;
+            }else if(lane == 1 && right_lane_clear == true )
+            {
+              lane = 2 ;
+            }
+            
+            //if you are in right go centre
+            if(lane == 2 && centre_lane_clear == true )
+            { 
+              lane = 1 ;
+            } 
+            
+          }
+       
+          
           
           if (too_close)
           {
@@ -165,6 +248,9 @@ int main() {
           {
             ref_vel += 0.224 ;
           }
+          //staus output
+          std::cout << "too_close: " << too_close << "centre_lane_clear: " << centre_lane_clear << "right_lane_clear: " << right_lane_clear << "left_lane_clear: " << left_lane_clear      <<std::endl     ;
+          
           
           //below is part 2 of video but before extra commented out collision avoidance section
           //create list of widely spaced xy points
