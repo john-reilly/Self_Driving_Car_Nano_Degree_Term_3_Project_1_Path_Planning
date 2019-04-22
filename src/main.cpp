@@ -241,7 +241,7 @@ int main() {
           // So I am going to wrtie the logic here with if - else statements
           if(another_car_in_my_lane == true)
           {
-            std::cout << "car in my lane" << std::endl ;
+            //std::cout << "car in my lane" << std::endl ;
             //if you are in lane 0 go into centre
             if(lane == 0 && centre_lane_clear == true )
             { 
@@ -297,6 +297,24 @@ int main() {
           std::cout << "Within 40m: " << within_40m << " within 30 m: " << within_30m << " within 15: " << within_15m << " within 5: " <<within_5m << std::endl ;
           std::cout << "centre_lane_clear: " << centre_lane_clear << " right_lane_clear: " << right_lane_clear << " left_lane_clear: " << left_lane_clear      <<std::endl     ;
           std::cout << "Lane: " << lane << std::endl ;
+          //statements to show what lane the ego car thinks it is in
+          std::cout << " The ego car is thinking........"<< std::endl ;
+          std::cout << " I am in the" ;
+          if(lane==0) std::cout << " left lane" << std::endl  ;
+          else if(lane==1) std::cout << " centre lane" << std::endl  ;
+          else if(lane==2) std::cout << " right lane" << std::endl  ;
+          //statements to show what the ego car thinks about the trafic in the lane it is in
+          std::cout << "There " ;
+          if(another_car_in_my_lane == false) std::cout << "are no other cars in my lane for at least 40 meters" << std::endl  ;
+          else if(within_40m == true) std::cout << "is a car ahead of me in my lane within 40 metres " << std::endl  ;
+          else if(within_30m == true) std::cout << "is a car ahead of me in my lane within 30 metres " << std::endl  ;
+          else if(within_15m == true) std::cout << "is a car ahead of me in my lane within 15 metres " << std::endl  ;
+          else if(within_5m == true) std::cout << "is a car ahead of me in my lane within 5 metres " << std::endl  ;
+          //statements about what the ego car thinks about the trafic in the 3 lanes
+          std::cout << "The "; // I use a sentence fragment here to show this group of sentces are related
+          if(left_lane_clear == true) std::cout << "left lane is clear." << std::endl ;
+          if(centre_lane_clear == true) std::cout << "centre lane is clear." << std::endl ;
+          if(right_lane_clear == true) std::cout << "right lane is clear." << std::endl ;
           
           
           //below is part 2 of video but before extra commented out collision avoidance section
