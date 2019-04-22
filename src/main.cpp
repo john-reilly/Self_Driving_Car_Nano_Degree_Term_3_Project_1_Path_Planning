@@ -151,7 +151,7 @@ int main() {
               //same idea as presented in video 
               //too many checks here should not have first one which makes sure cars is ahead of us I took this from the slow down section which should have been adapted more for here. the result was in some lane changes there was collisions with cars close to but behind the ego car.
               //if((check_car_s > car_s ) && ((check_car_s- car_s) < 30)&& ((check_car_s- car_s) > -30)  )
-              if( ((check_car_s- car_s) < 30)&& ((check_car_s- car_s) > -30)  )
+              if( ((check_car_s- car_s) < 50)&& ((check_car_s- car_s) > -20)  )//changing from 30 - 30
               {
                    left_lane_clear = false ;
               }
@@ -166,7 +166,7 @@ int main() {
               check_car_s += ((double ) prev_size * 0.02 * check_speed) ;
               //same idea as presented in video 
              // if((check_car_s > car_s ) && ((check_car_s- car_s) < 30) && ((check_car_s- car_s) > -30)  )
-              if( ((check_car_s- car_s) < 30) && ((check_car_s- car_s) > -30)  )
+              if( ((check_car_s- car_s) < 50) && ((check_car_s- car_s) > -20)  )//was 30 and -30
               {
                    centre_lane_clear = false ;
               }
@@ -181,7 +181,7 @@ int main() {
               check_car_s += ((double ) prev_size * 0.02 * check_speed) ;
               //same idea as presented in video 
               //if((check_car_s > car_s ) && ((check_car_s- car_s) < 30) && ((check_car_s- car_s) > -30)  )
-              if( ((check_car_s- car_s) < 30) && ((check_car_s- car_s) > -30)  )
+              if( ((check_car_s- car_s) < 50) && ((check_car_s- car_s) > -20)  )//was 30 and -30
               {
                    right_lane_clear = false ;
               }
@@ -213,7 +213,7 @@ int main() {
                //   lane = 0;
                // }
 //              }
-              
+              //Determine how close car in front is
               if((check_car_s > car_s ) && ((check_car_s- car_s) <= 40)&& ((check_car_s- car_s) > 30))
               {
               	within_40m = true;
@@ -269,7 +269,7 @@ int main() {
 //          {
 //           ref_vel += jerk_limit_acceleration ; // old Q+A value 0.224  ;
 //          }
-          
+          // control speed based on how close the car in front is
           if(within_40m)
           {
             ref_vel -= gentle_acceleration;
