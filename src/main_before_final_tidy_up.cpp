@@ -53,12 +53,13 @@ int main() {
   
   //inserted from Q+A video time 23.49 in video
   //lane number
-  int lane = 1;//outside scope? was until I passed it below
+  int lane = 1;//outside scope?
+  
   double ref_vel =  0 ; // was 49.5 ;//mph
   double gentle_acceleration = 0.224 ; // this was Q+A provided level
-  double jerk_limit_acceleration = 0.300 ;// higher level risky but I am getting caught by lane cut off vehicles and need to slow down faster
-  double brake_rate = 0.4 ;// I just picked a higher number than above ....
-  double emergency_stop = 0.6;// I just picked an even higher number than above...never used in action see report
+  double jerk_limit_acceleration = 0.300 ;// this was 0.224 but I am getting caught by lane cut off vehicles and need to slow down faster
+  double brake_rate = 0.4 ;// I just pciked a higher number than above ....
+  double emergency_stop = 0.6;
   
   
 
@@ -121,21 +122,25 @@ int main() {
           }
           
           //bool too_close = false;// this was from the Q+A video as basic slow down
-          bool within_40m = false;// this will be to allow a gentle slow down at long range
+          bool within_40m = false;// this will be to allow a gental slow down at long range
           bool within_30m = false;//this is the same distance as the Q+A video for normal slow down
           bool within_15m = false;//this will be for hard brake and will create a "jerk" event but better than a crash I think!
-          bool within_5m = false;
+          bool within_5m = false;//this will creata an emergency stop which will trigger a "jerk" event but I have seen the ego car cut off a few times and I would prefer if it did an emergency stop to a collision....also I haven't seen anybody else do this :)
           // my state related booleans
-          bool left_lane_clear = true ; //set these to true so if one even dection is found lane staus is changed
+          // setting defaults to false so not to assume
+          bool left_lane_clear = true ; //set these to true so if one dection is found lane staus is changed
           bool right_lane_clear = true ;
           bool centre_lane_clear = true ;
           bool another_car_in_my_lane = false ; 
           //end of mine
           //find ref_v to use
           for(int i = 0 ; i < sensor_fusion.size() ; i++)
-          {         
+          {
+            
+            
             float d = sensor_fusion[i][6];
-           
+            //std::cout << "d: " << d ; //this is to see ranges of D I think it may not go above 30 or 40 so my lane changes are off
+            //mine
             //check left lane
             if(d < (2 + 4 * 0 + 2) && d >(2+ 4 * 0 -2) )
             {
@@ -144,7 +149,10 @@ int main() {
               double check_speed = sqrt(vx*vx + vy * vy);
               double check_car_s = sensor_fusion[i][5];//as provides for same lane below
               check_car_s += ((double ) prev_size * 0.02 * check_speed) ;
-        
+              //same idea as presented in video 
+              //too many checks here should not have first one which makes sure cars is ahead of us I took this from the slow down section which should have been adapted more for here. the result was in some lane changes there was collisions with cars close to but behind the ego car.
+              //std::cout<< "check left lane check_car_s- car_s " << check_car_s- car_s;
+              //if((check_car_s > car_s ) && ((check_car_s- car_s) < 30)&& ((check_car_s- car_s) > -30)  )
               if( ((check_car_s- car_s) < 50)&& ((check_car_s- car_s) > -20)  )//changing from 30 - 30
               {
                    left_lane_clear = false ;
@@ -158,7 +166,9 @@ int main() {
               double check_speed = sqrt(vx*vx + vy * vy);
               double check_car_s = sensor_fusion[i][5];//as provides for same lane below
               check_car_s += ((double ) prev_size * 0.02 * check_speed) ;
-            
+              //same idea as presented in video 
+              //std::cout<< "check right lane check_car_s- car_s " << check_car_s- car_s;
+             // if((check_car_s > car_s ) && ((check_car_s- car_s) < 30) && ((check_car_s- car_s) > -30)  )
               if( ((check_car_s- car_s) < 50) && ((check_car_s- car_s) > -20)  )//was 30 and -30
               {
                    centre_lane_clear = false ;
@@ -172,14 +182,18 @@ int main() {
               double check_speed = sqrt(vx*vx + vy * vy);
               double check_car_s = sensor_fusion[i][5];//as provides for same lane below
               check_car_s += ((double ) prev_size * 0.02 * check_speed) ;
-              
+              //same idea as presented in video 
+              //std::cout<< "check right lane check_car_s- car_s " << check_car_s- car_s;
+              //if((check_car_s > car_s ) && ((check_car_s- car_s) < 30) && ((check_car_s- car_s) > -30)  )
               if( ((check_car_s- car_s) < 50) && ((check_car_s- car_s) > -20)  )//was 30 and -30
               {
                    right_lane_clear = false ;
               }
             }
-                          
-            //from Q+A video
+              
+              
+            
+            //end of mine
             if(d < (2 + 4 * lane + 2) && d >(2+ 4 * lane -2) )//is the car in the same lane as me
             {
               another_car_in_my_lane = true ; //mine
@@ -189,8 +203,20 @@ int main() {
               double check_speed = sqrt(vx*vx + vy * vy);
               double check_car_s = sensor_fusion[i][5];
               
-              check_car_s += ((double ) prev_size * 0.02 * check_speed) ; 
-              
+              check_car_s += ((double ) prev_size * 0.02 * check_speed) ; //if useing previuos points can project s value
+              //check s value greater than mine and check s gap
+//              if((check_car_s > car_s ) && ((check_car_s- car_s) < 30))
+//              {
+                //do some logic here lower ref velocity so we don't crash into car in frount of us 
+                //also could flag try to change lanes             
+//                too_close = true ;                
+                                
+                // change line addition Q+A video minute 54.18
+               // if(lane > 0)
+               // {
+               //   lane = 0;
+               // }
+//              }
               //Determine how close car in front is
               if((check_car_s > car_s ) && ((check_car_s- car_s) <= 40)&& ((check_car_s- car_s) > 30))
               {
@@ -212,13 +238,16 @@ int main() {
             }
             
           }
-// based on above make state decisions here.
-//
-// DECIOSION LOGIC SECTION
-//          
-//in English if there is any car any distance ahead in my lane and I am going less than 45 I will choose a free lane (this is for when the cars slows a little and matches the speed of the car ahead without getting close and triggering a lane change) or else if the car ahead is within 30m and there is a free lane I will choose the free lane , if all options are free I will default to the centre lane
+          // based on above make state decisions here.
+         //my decision logic here
+          // I read on stack overflow that if else statements are faster than if and more if's 
+          // this is becuase the subsequent cases are not evaluated if earlier ones are true
+          // So I am going to wrtie the logic here with if - else statements
+          //this is the main decision code
+          //in English if there is any car any distance ahead in my lane and I am going less than 45 I will choose a free lane (this is for when the cars slows a little and matches the speed of the car ahead without getting close and triggering a lane cnahge) or else if the car ahead is within 30m and there is a free lane I will choose the free lane , if all options are free I will default to the centre lane
           if(  (another_car_in_my_lane == true && ref_vel < 45) || (within_30m == true ) )//so it won't change to frequently
           {
+            //std::cout << "car in my lane" << std::endl ;
             //if you are in lane 0 go into centre
             if(lane == 0 && centre_lane_clear == true )
             { 
@@ -235,7 +264,7 @@ int main() {
             } 
             
           }
-          //default to centre if choice exists...this is to help make progress in traffic
+          //default to centre if choice exists...this is to help make progress in traffic as the car can easily move left or right but in laft lane and right lane a double lane manovre is less likely but possible
           if(  (left_lane_clear && centre_lane_clear) || (centre_lane_clear && right_lane_clear)  )
           {
             lane = 1; //default to centre if option of centre or outside lanes exists
@@ -243,6 +272,14 @@ int main() {
        
           
           
+//          if (too_close)
+//          {
+//            ref_vel -= jerk_limit_acceleration ;// old Q+A value 0.224;
+//          }
+//          else if (ref_vel < 49.5 )
+//          {
+//           ref_vel += jerk_limit_acceleration ; // old Q+A value 0.224  ;
+//          }
           // control speed based on how close the car in front is
           if(within_40m)
           {
@@ -265,27 +302,31 @@ int main() {
            ref_vel += jerk_limit_acceleration ; // old Q+A value 0.224  ;
           }
            
-//
-// Terminal screen outputs:
-//
-           //statements about which lane the ego car thinks it is in or about to enter
+          
+          //staus output
+          //std::cout << "too_close: " << too_close << "centre_lane_clear: " << centre_lane_clear << "right_lane_clear: " << right_lane_clear << "left_lane_clear: " << left_lane_clear      <<std::endl     ;
+        //  std::cout << "Within 40m: " << within_40m << " within 30 m: " << within_30m << " within 15: " << within_15m << " within 5: " <<within_5m << std::endl ;
+         // std::cout << "centre_lane_clear: " << centre_lane_clear << " right_lane_clear: " << right_lane_clear << " left_lane_clear: " << left_lane_clear      <<std::endl     ;
+        //  std::cout << "Lane: " << lane << std::endl ;
+          //statements to show what lane the ego car thinks it is in
           std::cout << " The ego car is thinking........"<< std::endl ;
           std::cout << " I am in the" ;
           if(lane==0) std::cout << " left lane." << std::endl  ;
           else if(lane==1) std::cout << " centre lane." << std::endl  ;
           else if(lane==2) std::cout << " right lane." << std::endl  ;
-          //statements about what the ego car thinks about the trafic ahead in same lane
-          if(another_car_in_my_lane == false) std::cout << "There are no other cars in my lane for at least 40 meters" << std::endl  ;
-          else if(within_40m == true) std::cout << "There is a car ahead of me in my lane within 40 metres " << std::endl  ;
-          else if(within_30m == true) std::cout << "There is a car ahead of me in my lane within 30 metres " << std::endl  ;
-          else if(within_15m == true) std::cout << "There is a car ahead of me in my lane within 15 metres " << std::endl  ;
-          else if(within_5m == true) std::cout << "There is a car ahead of me in my lane within 5 metres " << std::endl  ;
+          //statements to show what the ego car thinks about the trafic in the lane it is in
+          std::cout << "There " ;
+          if(another_car_in_my_lane == false) std::cout << "are no other cars in my lane for at least 40 meters" << std::endl  ;
+          else if(within_40m == true) std::cout << "is a car ahead of me in my lane within 40 metres " << std::endl  ;
+          else if(within_30m == true) std::cout << "is a car ahead of me in my lane within 30 metres " << std::endl  ;
+          else if(within_15m == true) std::cout << "is a car ahead of me in my lane within 15 metres " << std::endl  ;
+          else if(within_5m == true) std::cout << "is a car ahead of me in my lane within 5 metres " << std::endl  ;
           //statements about what the ego car thinks about the trafic in the 3 lanes
-          if(left_lane_clear == true) std::cout << "The left lane is clear." << std::endl ;
-          if(centre_lane_clear == true) std::cout << "The centre lane is clear." << std::endl ;
-          if(right_lane_clear == true) std::cout << "The right lane is clear." << std::endl ;
- 
-//Generating trajectories using Spline.h and from Q+A video
+          std::cout << "The "; // I use a sentence fragment here to show this group of sentces are related
+          if(left_lane_clear == true) std::cout << "left lane is clear." << std::endl ;
+          if(centre_lane_clear == true) std::cout << "centre lane is clear." << std::endl ;
+          if(right_lane_clear == true) std::cout << "right lane is clear." << std::endl ;
+          
           
           //below is part 2 of video but before extra commented out collision avoidance section
           //create list of widely spaced xy points
@@ -330,6 +371,9 @@ int main() {
             
            }
             
+            //using frenet point 
+            //tried //lane = 1; // I am getting lane not captured here going to using hardwaired number to get past it
+           // int lane_number = 2 + 4 ; //as in 2 + 4 times lane;//fixed
 			 vector<double> next_wp0 = getXY(car_s + 30, 2 + 4 * lane, map_waypoints_s,map_waypoints_x,map_waypoints_y);
             
              vector<double> next_wp1 = getXY(car_s + 60,  2 + 4 * lane, map_waypoints_s,map_waypoints_x,map_waypoints_y);
@@ -362,7 +406,9 @@ int main() {
           
           //set xy
           s.set_points(ptsx, ptsy);
-
+          //define hte aactual xy points
+         // vector<double> next_x_vals ;//redeclaration
+         // vector<double> next_y_vals ;//redeclaration
           
           
           for(int i = 0; i < previous_path_x.size(); i++)
@@ -380,8 +426,8 @@ int main() {
           double x_add_on = 0;
           //fill up the rest of the path planner
           for(int i = 1; i<= 50 - previous_path_x.size();i++)
-          {
-
+          {//another "not captured error"
+           // int ref_vel = 49.5; //the location of the first ref_vel declaration outside hte thread must be the issue??//fixed by bring ref_vel into scope with &ref_vel
             double N = (target_dist/( 0.02 * ref_vel / 2.24 ) );
             double x_point = x_add_on+(target_x)/N;
             double y_point = s(x_point) ; 
@@ -401,7 +447,28 @@ int main() {
             next_x_vals.push_back(x_point);
             next_y_vals.push_back(y_point);
           }
- 
+          
+                       
+         
+          
+          
+          
+         //from Q+A first part
+         /* 
+         double dist_inc = 0.45 ;// //was 0.5; // because of 50 miles an hour
+          for (int i = 0; i < 50; ++i) {
+            
+            double next_s = car_s + (i+1)*dist_inc ;
+            double next_d = 6 ; 
+            vector<double> xy = getXY(next_s,next_d, map_waypoints_s, map_waypoints_x, map_waypoints_y) ;
+            
+            next_x_vals.push_back(xy[0]) ;
+            next_y_vals.push_back(xy[1]) ;
+            
+              //next_x_vals.push_back(car_x+(dist_inc*i)*cos(deg2rad(car_yaw)));//x,y coordinates
+            //next_y_vals.push_back(car_y+(dist_inc*i)*sin(deg2rad(car_yaw)));
+          } 
+          */
 		// END of Student sections
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;
