@@ -139,6 +139,7 @@ int main() {
             
             
             float d = sensor_fusion[i][6];
+            std::cout << "d: " << d ; //this is to see ranges of D I think it may not go above 30 or 40 so my lane changes are off
             //mine
             //check left lane
             if(d < (2 + 4 * 0 + 2) && d >(2+ 4 * 0 -2) )
@@ -294,9 +295,9 @@ int main() {
           
           //staus output
           //std::cout << "too_close: " << too_close << "centre_lane_clear: " << centre_lane_clear << "right_lane_clear: " << right_lane_clear << "left_lane_clear: " << left_lane_clear      <<std::endl     ;
-          std::cout << "Within 40m: " << within_40m << " within 30 m: " << within_30m << " within 15: " << within_15m << " within 5: " <<within_5m << std::endl ;
-          std::cout << "centre_lane_clear: " << centre_lane_clear << " right_lane_clear: " << right_lane_clear << " left_lane_clear: " << left_lane_clear      <<std::endl     ;
-          std::cout << "Lane: " << lane << std::endl ;
+        //  std::cout << "Within 40m: " << within_40m << " within 30 m: " << within_30m << " within 15: " << within_15m << " within 5: " <<within_5m << std::endl ;
+         // std::cout << "centre_lane_clear: " << centre_lane_clear << " right_lane_clear: " << right_lane_clear << " left_lane_clear: " << left_lane_clear      <<std::endl     ;
+        //  std::cout << "Lane: " << lane << std::endl ;
           //statements to show what lane the ego car thinks it is in
           std::cout << " The ego car is thinking........"<< std::endl ;
           std::cout << " I am in the" ;
